@@ -1,15 +1,63 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FileUpload from "@/components/FileUpload";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [resumeText, setResumeText] = useState<string | null>(null);
+  const [displayedText, setDisplayedText] = useState("");
   const { toast } = useToast();
+
+  // Sample JSON structure for demonstration
+  const sampleResumeData = {
+    personalInfo: {
+      name: "John Doe",
+      email: "john@example.com",
+      phone: "+1 234 567 8900"
+    },
+    experience: [
+      {
+        company: "Tech Corp",
+        position: "Senior Developer",
+        duration: "2020-2023"
+      }
+    ],
+    education: {
+      degree: "Bachelor of Science",
+      field: "Computer Science",
+      university: "Example University"
+    },
+    skills: [
+      "JavaScript",
+      "React",
+      "Node.js",
+      "Python"
+    ]
+  };
+
+  useEffect(() => {
+    if (resumeText) {
+      const jsonString = JSON.stringify(sampleResumeData, null, 2);
+      let currentIndex = 0;
+
+      const interval = setInterval(() => {
+        if (currentIndex <= jsonString.length) {
+          setDisplayedText(jsonString.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 20); // Adjust speed as needed
+
+      return () => clearInterval(interval);
+    }
+  }, [resumeText]);
 
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
@@ -20,7 +68,7 @@ const Index = () => {
       // In a real implementation, you would send this to your backend
       // For now, we'll just simulate processing
       setTimeout(() => {
-        setResumeText("Sample extracted text from resume...");
+        setResumeText("processed");
         toast({
           title: "Resume processed successfully",
           description: "Your resume has been analyzed and is ready for review.",
@@ -55,9 +103,26 @@ const Index = () => {
           ) : (
             <div className="animate-fade-in space-y-4">
               <h2 className="text-xl font-semibold">Extracted Information</h2>
-              <p className="text-gray-700">{resumeText}</p>
+              <div className="relative rounded-lg bg-gray-900 p-4">
+                <SyntaxHighlighter 
+                  language="json"
+                  style={vs2015}
+                  customStyle={{
+                    background: 'transparent',
+                    padding: '0',
+                    margin: '0',
+                    fontSize: '14px',
+                    lineHeight: '1.5'
+                  }}
+                >
+                  {displayedText}
+                </SyntaxHighlighter>
+              </div>
               <Button
-                onClick={() => setResumeText(null)}
+                onClick={() => {
+                  setResumeText(null);
+                  setDisplayedText("");
+                }}
                 variant="outline"
                 className="mt-4"
               >
